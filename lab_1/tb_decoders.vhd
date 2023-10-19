@@ -2,12 +2,24 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
-entity decoders_tb is
-end decoders_tb;
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
 
-architecture testbench of decoders_tb is
-  signal sel_tb    : std_logic_vector(1 downto 0) := "00";
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity tb_decoders is
+
+end tb_decoders;
+
+architecture testbench of tb_decoders is
+
+signal sel_tb    : std_logic_vector(1 downto 0) := "00";
   signal data_tb   : std_logic_vector(3 downto 0) := "0000";
   signal seg_tb    : std_logic_vector(6 downto 0);
   signal an_tb     : std_logic_vector(3 downto 0);
@@ -30,16 +42,45 @@ begin
       an   => an_tb
     );
 
-  stimulus_process : process
-  begin
-    for sel_value in 0 to 3 loop
-      for data_value in 0 to 9 loop
-        sel_tb  <= std_logic_vector(to_unsigned(sel_value, sel_tb'length));
-        data_tb <= std_logic_vector(to_unsigned(data_value, data_tb'length));
-        wait for 10 ns;  
-      end loop;
-    end loop;
-    wait;
-  end process;
-
+    process
+    begin
+      sel_tb  <= "00"; -- Initialize sel_tb
+      data_tb <= "0000"; -- Initialize data_tb
+    
+      -- First iteration
+      wait for 10 ns;
+      sel_tb  <= "01";
+      wait for 10 ns;
+      sel_tb  <= "10";
+      wait for 10 ns;
+      sel_tb  <= "11";
+      wait for 10 ns;
+    
+      -- Reset sel_tb
+      sel_tb  <= "00";
+    
+      -- Second iteration
+      wait for 10 ns;
+      data_tb <= "0001";
+      wait for 10 ns;
+      data_tb <= "0010";
+      wait for 10 ns;
+      data_tb <= "0011";
+      wait for 10 ns;
+      data_tb <= "0100";
+      wait for 10 ns;
+      data_tb <= "0101";
+      wait for 10 ns;
+      data_tb <= "0110";
+      wait for 10 ns;
+      data_tb <= "0111";
+      wait for 10 ns;
+      data_tb <= "1000";
+      wait for 10 ns;
+      data_tb <= "1001";
+      wait for 10 ns;
+    
+      wait;
+    end process;
+    
 end testbench;
