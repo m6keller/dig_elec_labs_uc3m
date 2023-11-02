@@ -42,22 +42,15 @@ architecture Behavioral of die is
 
 begin
     -- Counter instantiation
-    counter_instance: entity work.counter
-        port map (s
-            Clk => Clk,                 -- Connect to the same clock signal
-            Enable => CounterEnable,    -- Connect to the counter enable signal
-            Count => CounterValue       -- Connect to the output of the counter
-        );
+    counter_inst : counter
+    port map (
+        Reset => Reset,
+        Clk => Clk,
+        Enable => Enable,
+        Count => counter_output
+    );
 
-    -- Timer logic to generate a 1 ms enable signal
-    process (Clk)
-    begin
-        -- Implement timer logic to generate a 1 ms enable signal
-        -- The timer output should control the CounterEnable signal
-    end process;
-
-    -- Display logic (connecting CounterValue to the 7-segment display)
-
-    -- Other VHDL logic for the die entity
+    
+    an <= counter_output;
 
 end Behavioral;
