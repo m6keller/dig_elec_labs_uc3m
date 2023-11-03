@@ -15,57 +15,52 @@ entity die is
 end die;
 
 architecture Behavioral of die is
-    -- Signal declarations
     signal CounterEnable : std_logic := '0'; -- Signal to control counter enable
     signal CounterValue : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
 
-    -- Include any other signal declarations and components here
-
-    -- Instantiate the display logic
-    component display_logic is
+    component counter is
         port (
-            sel: in unsigned(1 downto 0);
-            data: in std_logic_vector(3 downto 0);
-            seg: out std_logic_vector(6 downto 0);
-            an: out std_logic_vector(3 downto 0)
+            clk : in STD_LOGIC;
+            reset : in STD_LOGIC;
+            enable : in STD_LOGIC;
+            count : out STD_LOGIC_VECTOR(3 downto 0)
         );
     end component;
 
 begin
-    -- Counter instantiation
-    counter_instance: entity work.counter
+    counter_instance: counter
         port map (
             Clk => Clk,               -- Connect to the same clock signal
-            Enable => CounterEnable,  -- Connect to the counter enable signal
+            Enable => Enable,
+            Reset => CounterEnable,  -- Connect to the counter enable signal
             Count => CounterValue     -- Connect to the output of the counter
         );
-
-    -- Display logic instantiation
-    display_instance: display_logic
-        port map (
-            sel => sel,
-            data => CounterValue,  -- Connect CounterValue to the display data input
-            seg => seg,
-            an => an
-        );
-
-    -- Add any other component instantiations and connections here
-
-    -- Enable control logic
-    process (Reset, Clk, Enable)
-    begin
-        if Reset = '1' then
-            CounterEnable <= '0'; -- Reset the enable signal on reset
-        elsif clk’EVENT AND clk = ‘1’  then
-            -- Control the enable signal based on the central button (BTNC)
-            if Enable = '1' then
-                CounterEnable <= '1'; -- Enable the counter
-            else
-                CounterEnable <= '0'; -- Disable the counter
-            end if;
-        end if;
+    process(clk)
+   begin
+    case CounterValue is
+      when "0000" => seg <= "1111110";
+      when "0001" => seg <= "0110000";
+      when "0010" => seg <= "1101101";
+      when "0011" => seg <= "1111001";
+      when "0100" => seg <= "0110011";
+      when "0101" => seg <= "1011011";
+      when "0110" => seg <= "0001111";
+      when "0111" => seg <= "1110000";
+      when "1000" => seg <= "1111111";
+      when "1001" => seg <= "1110011";
+        when others => seg <= "0000000";  -- Default to all segments off
+      end case;
     end process;
-
-    -- Add any other VHDL logic for the die entity
+    
+    process(sel)
+    begin
+      case sel is
+        when "00" => an <= "1110";
+        when "01" => an <= "1101";
+        when "10" => an  <= "1011";
+        when others => an <= "0111";
+    end case;
+  end process;
+    
 
 end Behavioral;
