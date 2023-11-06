@@ -26,36 +26,12 @@ begin
     -- Generate clock signal
     process
     begin
+        Enable <= '1';
         Clk <= '0';
-        wait for 1 ns;
+        wait for 5 ns;
         Clk <= '1';
-        wait for 1 ns;
+        wait for 5 ns;
     end process;
     
-    process
-    begin
-        sel <= "00";
-        wait for 100 ns;
-        sel <= "01";
-        wait for 100 ns;
-        sel <= "10";
-        wait for 100 ns;
-        sel <= "11";
-        wait for 100 ns;
-        
-    end process;
-
-    -- Generate different signals for enable and reset
-    process
-    begin
-        Reset <= '0';
-        Enable <= '1';
-        
-        wait for 59000000 ns;
-        Enable <= '0';
-
-        wait for 47000000 ns;
-      
-    end process;
 
 end Behavioral;
