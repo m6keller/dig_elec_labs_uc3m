@@ -18,7 +18,9 @@ architecture Behavioral of die is
     signal CounterEnable : std_logic := '0'; -- Signal to control counter enable
     signal CounterValueSeconds : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
     signal CounterValueTens : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
+    signal ClkTens: std_logic := '0';
     signal CounterValueHundreds : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
+    signal ClkHundreds: std_logic := '0';
 
     component counter is
         port (
@@ -40,7 +42,7 @@ begin
 
       counter_instance_tens: counter
         port map (
-            Clk => CounterValueSeconds,               -- Connect to the same clock signal
+            Clk => ClkTens,               -- Connect to the same clock signal
             Enable => Enable,
             Reset => CounterEnable,  -- Connect to the counter enable signal
             Count => CounterValueTens     -- Connect to the output of the counter
@@ -53,7 +55,27 @@ begin
           Reset => CounterEnable,  -- Connect to the counter enable signal
           Count => CounterValueHundreds     -- Connect to the output of the counter
       );
-    process(CounterValue)
+    
+    
+    process(CounterValueSeconds)
+    begin
+      if CounterValueSeconds = "1001" then
+        ClkTens <= '1';
+      else
+        ClkTens <= '0';
+      end if;
+    end process;
+      
+    
+    process(CounterValueTens)
+    begin
+      if CounterValueTens = "1001" then
+        ClkHundreds <= '1';
+      else
+        ClkHundreds <= '0';
+      end if;
+    end process;
+
    begin
     case CounterValue is
       when "0000" => seg <= "1111110";
