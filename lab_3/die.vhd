@@ -16,19 +16,25 @@ end die;
 
 architecture Behavioral of die is
     signal CounterEnable : std_logic := '0'; -- Signal to control counter enable
+    signal CounterValueMs : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
+    signal CounterValueHundredths : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
+    signal CounterValueTenths : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
     signal CounterValueSeconds : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
-    signal CounterValueTensNs : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
-    signal CounterValueTens : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
-    signal ClkTens: std_logic := '0';
-    signal ClkSeconds: std_logic := '0';
-    signal CounterValueHundreds : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
-    signal ClkHundreds: std_logic := '0';
+    
     signal SecondsEnable: std_logic := '0';
-    signal TensEnable: std_logic := '0';
-    signal HundredsEnable: std_logic := '0';
-    signal ClkThousands: std_logic := '0';
+    signal TenthsEnable: std_logic := '0';
+    signal HundredthsEnable: std_logic := '0';
+
+    
+    signal ThousandthsCarryOut: std_logic := '0';
+    signal HundredthsCarryOut: std_logic := '0';
+    signal TenthsCarryOut: std_logic := '0';
+    signal SecondsCarryOut: std_logic := '0';
+
+
     signal DisplayCounter4Bytes: std_logic_vector(3 downto 0) := "0000";
     signal DisplayCounter: std_logic_vector(1 downto 0) := "00";
+
     signal ClkDisplayOut: std_logic := '0';
     signal cur_counter: std_logic_vector(3 downto 0) := "0000";
 
@@ -45,62 +51,65 @@ architecture Behavioral of die is
             reset : in STD_LOGIC;
             enable : in STD_LOGIC;
             count : out STD_LOGIC_VECTOR(3 downto 0);
-            OutClk : out STD_LOGIC
+            CarryOut : out STD_LOGIC
         );
     end component;
 
 begin
-    counter_instance_tens_ns: counter
+    counter_instance_ms: counter
         generic map (
             MAX_COUNT => 9,
             OUT_MAX => "1001"
         )
         port map (
             Clk => Clk,               -- Connect to the same clock signal
-            Enable => Enable,
-            Reset => CounterEnable,  -- Connect to the counter enable signal
-            Count => CounterValueTensNs,     -- Connect to the output of the counter
-            OutClk => ClkSeconds
+            Enable => Clk,
+            Reset => Reset,  -- Connect to the counter enable signal
+            Count => CounterValueMs,     -- Connect to the output of the counter
+            CarryOut => ThousandthsCarryOut
         );
     
+    counter_instance_hundredths: counter
+        generic map (
+            MAX_COUNT => 9,
+            OUT_MAX => "1001"
+        )
+        port map (
+          Clk => Clk,               -- Connect to the same clock signal
+          Enable => HundredthsEnable,
+          Reset => Reset,  -- Connect to the counter enable signal
+          Count => CounterValueHundredths,     -- Connect to the output of the counter
+          CarryOut => HundredthsCarryOut
+      );
+
+
+    counter_instance_tenths: counter
+        generic map (
+            MAX_COUNT => 9,
+            OUT_MAX => "1001"
+        )
+        port map (
+            Clk => Clk,               -- Connect to the same clock signal
+            Enable => TenthsEnable,
+            Reset => Reset,  -- Connect to the counter enable signal
+            Count => CounterValueTenths,     -- Connect to the output of the counter
+            CarryOut => TenthsCarryOut
+        );
+
     counter_instance_seconds: counter
         generic map (
             MAX_COUNT => 9,
             OUT_MAX => "1001"
         )
         port map (
-            Clk => ClkSeconds,               -- Connect to the same clock signal
-            Enable => Enable,
-            Reset => SecondsEnable,  -- Connect to the counter enable signal
+            Clk => Clk,               -- Connect to the same clock signal
+            Enable => SecondsEnable,
+            Reset => Reset,  -- Connect to the counter enable signal
             Count => CounterValueSeconds,     -- Connect to the output of the counter
-            OutClk => ClkTens
+            CarryOut => SecondsCarryOut
         );
 
-      counter_instance_tens: counter
-        generic map (
-            MAX_COUNT => 9,
-            OUT_MAX => "1001"
-        )
-        port map (
-            Clk => ClkTens,               -- Connect to the same clock signal
-            Enable => Enable,
-            Reset => TensEnable,  -- Connect to the counter enable signal
-            Count => CounterValueTens,     -- Connect to the output of the counter
-            OutClk => ClkHundreds
-        );
 
-      counter_instance_hundreds: counter
-        generic map (
-            MAX_COUNT => 9,
-            OUT_MAX => "1001"
-        )
-        port map (
-          Clk => ClkHundreds,               -- Connect to the same clock signal
-          Enable => Enable,
-          Reset => HundredsEnable,  -- Connect to the counter enable signal
-          Count => CounterValueHundreds,     -- Connect to the output of the counter
-          OutClk => ClkThousands
-      );
       
       counter_instance_display: counter
          generic map (
@@ -112,8 +121,36 @@ begin
           Enable => Enable,
           Reset => Reset,  -- Connect to the counter enable signal
           Count => DisplayCounter4Bytes,     -- Connect to the output of the counter
-          OutClk => ClkDisplayOut
+          CarryOut => ClkDisplayOut
       );
+      
+--    HundredthsEnable <= '1' when rising_edge(ThousandthsCarryOut) else '0';
+  process(ThousandthsCarryOut)
+  begin
+     HundredthsEnable <= '0';
+    
+    if rising_edge(ThousandthsCarryOut) then
+        HundredthsEnable <= '1';
+    end if;
+
+  end process;
+  
+  process(Clk)
+  begin
+    TenthsEnable <= '0';
+    if HundredthsCarryOut = '1' and ThousandthsCarryOut = '1' then
+        TenthsEnable <= '1';
+    end if;
+    
+  end process;
+  
+  process(Clk)
+  begin
+    SecondsEnable <='0';
+    if TenthsCarryOut = '1' and TenthsEnable = '1' then
+        SecondsEnable<='1';
+    end if;
+  end process;
     
    process(DisplayCounter4Bytes)
    begin
@@ -122,10 +159,10 @@ begin
    process(ClkDisplayOut)
    begin
     case DisplayCounter is
-        when "00" => cur_counter <= CounterValueTensNs;
+        when "00" => cur_counter <= CounterValueMs;
         when "01" => cur_counter <= CounterValueSeconds;
-        when "10" => cur_counter <= CounterValueTens;
-        when others => cur_counter <= CounterValueHundreds;
+        when "10" => cur_counter <= CounterValueTenths;
+        when others => cur_counter <= CounterValueHundredths;
     end case;
     case DisplayCounter is
         when "00" => an <= "1110";
