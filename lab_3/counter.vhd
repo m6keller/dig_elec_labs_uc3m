@@ -33,7 +33,20 @@ begin
               if Enable = '1' then 
               timer_count <= timer_count + 1;
                if timer_count = MAX_COUNT then
-                   timer_output <= '1';
+--                   timer_output <= '1';
+-----------
+                        if count_reg = unsigned(OUT_MAX) then
+                            carry_out <= '1';
+                            count_reg <= "0000";
+                        else
+                            count_reg <= count_reg + 1;
+                            carry_out <= '0';
+                        end if;
+                        Count <= std_logic_vector(count_reg);
+                        CarryOut <= carry_out;
+
+
+-----
                   timer_count  <= 0;
                   
                else
@@ -45,27 +58,27 @@ begin
    
  
  
-    process (Clk, Reset)
-    begin
-        if Reset = '1' then
-            count_reg <= "0000";
-         elsif rising_edge(Clk) then
-            if Enable = '1' then
+--    process (Clk, Reset)
+--    begin
+--        if Reset = '1' then
+--            count_reg <= "0000";
+--         elsif rising_edge(Clk) then
+--            if Enable = '1' then
                 
-                if timer_output = '1' then
-                    if count_reg = unsigned(OUT_MAX) then
-                        carry_out <= '1';
-                        count_reg <= "0000";
-                    else
-                        count_reg <= count_reg + 1;
-                        carry_out <= '0';
-                    end if;
-                end if;
-            end if;
-        end if;
-    end process;
+--                if timer_output = '1' then
+--                    if count_reg = unsigned(OUT_MAX) then
+--                        carry_out <= '1';
+--                        count_reg <= "0000";
+--                    else
+--                        count_reg <= count_reg + 1;
+--                        carry_out <= '0';
+--                    end if;
+--                end if;
+--            end if;
+--        end if;
+--    end process;
 
-    Count <= std_logic_vector(count_reg);
-    CarryOut <= carry_out;
+--    Count <= std_logic_vector(count_reg);
+--    CarryOut <= carry_out;
 
 end Behavioral;
