@@ -4,6 +4,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+-- State machine to dictate whether counting should be enabled and if display should be cleared
 entity StateController is
     Port ( 
         -- below are direct inputs into system

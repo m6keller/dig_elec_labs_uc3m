@@ -3,6 +3,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+-- Generic counter used to keep track of milliseconds, hundredths of a second, etc. to dictate what to show on the FPGA display
 entity counter is
     Generic (
         MAX_COUNT : natural;
@@ -25,6 +26,7 @@ architecture Behavioral of counter is
     signal carry_out : std_logic := '0';
 begin
 
+    -- CarryOut is used to signal when the counter has reached its maximum value and when to trigger the counter holding value of more significance (e.g. seconds) to increment
     CarryOut <= '1' when count_reg = unsigned(OUT_MAX) and Enable = '1' else '0';
     
     process (Clk, Reset, Clear)

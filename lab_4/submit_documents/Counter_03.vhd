@@ -2,6 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+-- Entity to count from 0 to 3 to control the 7-segment display
 entity Counter_03 is
     Port ( 
         Clk : in STD_LOGIC;
@@ -14,8 +15,6 @@ end Counter_03;
 architecture Behavioral of Counter_03 is
     signal count_reg : unsigned(1 downto 0) := "00";
 begin
-
-       
 
   process (Clk, Reset)
    begin

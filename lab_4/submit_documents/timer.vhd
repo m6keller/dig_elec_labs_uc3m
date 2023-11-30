@@ -3,6 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+-- Generic timer to divide time into 1 second intervals
 entity timer is
     Port ( 
         Clk : in STD_LOGIC;

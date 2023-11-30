@@ -3,6 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+-- EdgeDectector is used to detect a button pressed. This is necessary so that multiple button presses are not registered if the user holds down the button.
 entity EdgeDetector1 is
 	Port (
 		clk: in STD_LOGIC;

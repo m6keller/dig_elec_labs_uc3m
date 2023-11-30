@@ -3,6 +3,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+-- This entity represents the top-level architecture of the system. 
+-- It takes in the clock (Clk) signal, reset (Reset) signal, and button (Enable) signal,
+-- and outputs the 7-segment display and the signals (seg) to dictate which display is being controlled (an).
 entity reflejos is
   	port (
     	Reset:  in  std_logic;
@@ -46,10 +49,9 @@ architecture Behavioral of reflejos is
     signal sel :  std_logic_vector(1 downto 0) := "00";
     signal data : std_logic_vector(3 downto 0) := "0000"; -- Signal to store counter value
     
-      signal timer_count : natural range 0 to 999999 := 0;
-      signal millisecondEnable : STD_LOGIC := '0';
+    signal timer_count : natural range 0 to 999999 := 0;
+    signal millisecondEnable : STD_LOGIC := '0';
 
-    
     
     component Counter_03 is
         Port ( 
@@ -82,17 +84,17 @@ architecture Behavioral of reflejos is
 
     component StateController is
     Port ( 
--- below are direct inputs into system
-Clk : in STD_LOGIC;
-Reset: in STD_LOGIC;
-Button: in STD_LOGIC; -- this is called "Enable" in the top-level file
--- below is output from random count
-EoC_rand: in STD_LOGIC;
+        -- below are direct inputs into system
+        Clk : in STD_LOGIC;
+        Reset: in STD_LOGIC;
+        Button: in STD_LOGIC; -- this is called "Enable" in the top-level file
+        -- below is output from random count
+        EoC_rand: in STD_LOGIC;
 
-clear: out STD_LOGIC; -- whether or not to clear timers
-	enable: out STD_LOGIC -- whether or not to enable timer counting 
-    );
-end component;
+        clear: out STD_LOGIC; -- whether or not to clear timers
+            enable: out STD_LOGIC -- whether or not to enable timer counting 
+            );
+    end component;
 
     component timer is
 	Port (
@@ -121,22 +123,24 @@ end component;
 
 Begin
 
+    -- Base counter to divide clock frequency into milliseconds
+    process (Clk, Reset)
+    begin
 
-process (Clk, Reset)
-   begin
+        if Reset = '1' then
+                timer_count <= 0;
+            elsif rising_edge(Clk) then
+                timer_count <= timer_count + 1;
+                if timer_count = 99999 then
+                    timer_count  <= 0;
+                    end if;
+            end if;
+    end process;
 
-       if Reset = '1' then
-            timer_count <= 0;
-           elsif rising_edge(Clk) then
-              timer_count <= timer_count + 1;
-               if timer_count = 99999 then
-                  timer_count  <= 0;
-                end if;
-           end if;
-end process;
+    -- Enable millisecond counter every 1 millisecond based on frequency of the FPGA
+    millisecondEnable <= '1' when timer_count = 99999 else '0';
 
-millisecondEnable <= '1' when timer_count = 99999 else '0';
-
+    -- Counter to represent milliseconds to be displayed
     counter_instance_ms: counter
         generic map (
             MAX_COUNT => 9,
@@ -151,7 +155,8 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
             	Clear => Clear_out
 
         );
-    
+
+    -- Counter to represent hundredths of a second to be displayed
     counter_instance_hundredths: counter
         generic map (
             MAX_COUNT => 9,
@@ -167,7 +172,7 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
 
       );
 
-
+    -- Counter to represent tenths of a second to be displayed
     counter_instance_tenths: counter
         generic map (
             MAX_COUNT => 9,
@@ -183,6 +188,7 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
 
         );
 
+    -- Counter to represent whole of a seconds to be displayed
     counter_instance_seconds: counter
         generic map (
             MAX_COUNT => 9,
@@ -200,7 +206,7 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
 
 
 
-
+    -- Detect button presses
     Edgedetector_instance: EdgeDetector1
 	Port map (
 		Clk => Clk,
@@ -209,8 +215,8 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
 		Enable_out => Enable_out_out
 	);
 	
-
-   stateController_Instance: StateController
+    -- Instance of the finite state machine used to dictate the behavior of the system (enable counting and clearing display)
+    stateController_Instance: StateController
 	Port map (
 		Clk => Clk,
         Reset =>Reset,
@@ -230,26 +236,7 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
 		Overflow => TimerOverflow
 	);
 		
-
-    
-    
---      counter_instance_display: counter
---         generic map (
---          MAX_COUNT => 99,
---          OUT_MAX => "0011" -- carryout does notmatter
---        )
---        port map (
---          Clk => Clk,               -- Connect to the same clock signal
---          Enable => CounterEnable,
---          Clear => Clear_out,
---          Reset => Reset,  -- Connect to the counter enable signal
---          Count => DisplayCounter4Bytes,     -- Connect to the output of the counter
---          CarryOut => ClkDisplayOut
---      );
-	
-	
-	--counter on sel from 0 to 3
-	
+	-- counter to represent 10ms to control how fast displays are being switched
 	counter_10ms_display_instance: counter_10ms
 	  port map (  
 	   Clk => Clk,  
@@ -258,16 +245,16 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
           CarryOut => counter_10_ms_display_carry_out
       );
       
-      counter_03_display_instance:counter_03
-       port map ( 
-            Clk => Clk,  
-            Reset => Reset,
-            Enable => counter_10_ms_display_carry_out,
-            Count => sel
-         );
+    -- Counter to control which display is being activated
+    counter_03_display_instance:counter_03
+    port map ( 
+        Clk => Clk,  
+        Reset => Reset,
+        Enable => counter_10_ms_display_carry_out,
+        Count => sel
+        );
 	   
-	
-	
+    -- Process to activate display based on counter_03_display_instance
 	process(sel)
 	begin
 	   case sel is
@@ -283,55 +270,7 @@ millisecondEnable <= '1' when timer_count = 99999 else '0';
 
     end process;
             
-            
---    HundredthsEnable <= '1' when rising_edge(ThousandthsCarryOut) else '0';
---  process(ThousandthsCarryOut)
---  begin
---     HundredthsEnable <= '0';
-    
---    if rising_edge(ThousandthsCarryOut) then
---        HundredthsEnable <= '1';
---    end if;
-
---  end process;
-  
---  process(Clk)
---  begin
---    TenthsEnable <= '0';
---    if HundredthsCarryOut = '1' and ThousandthsCarryOut = '1' then
---        TenthsEnable <= '1';
---    end if;
-    
---  end process;
-  
---  process(Clk)
---  begin
---    SecondsEnable <='0';
---    if TenthsCarryOut = '1' and TenthsEnable = '1' then
---        SecondsEnable<='1';
---    end if;
---  end process;
-    
---   process(DisplayCounter4Bytes)
---   begin
---        DisplayCounter <= DisplayCounter4Bytes(1 downto 0);
---   end process;
---   process(ClkDisplayOut)
---   begin
---    case DisplayCounter is
---        when "00" => cur_counter <= CounterValueMs;
---        when "01" => cur_counter <= CounterValueSeconds;
---        when "10" => cur_counter <= CounterValueTenths;
---        when others => cur_counter <= CounterValueHundredths;
---    end case;
---    case DisplayCounter is
---        when "00" => an <= "1110";
---        when "01" => an <= "1101";
---        when "10" => an  <= "1011";
---        when others => an <= "0111";
---    end case;
-    
-    
+    -- Process to decode the data to be displayed on the 7-segment display with active-low
     process(data)
     begin
     case data is

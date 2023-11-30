@@ -2,6 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+-- Entity to 10 milliseconds given the frequency of the FPGA to allow other instances to be based off millisecond time
 entity counter_10ms is
     Port ( 
         Clk : in STD_LOGIC;
